@@ -1,20 +1,26 @@
-import sys
-from pathlib import Path
-from pyvis.network import Network
-import re
 import argparse
+import sys
 
 parser = argparse.ArgumentParser(
-            prog='C/C++ Header Graphing',
+            prog='C/C++ Include Grapher',
             description='Makes a graph from the #include directives',
             epilog='')
 
 parser.add_argument('-ho', '--header_only', action='store_true', help='Graph only header files')
 parser.add_argument('-all', '--all_includes', action='store_true', help='Also graph files not found in given paths')
+parser.add_argument('-b', '--browser', action='store_true', help='Open in browser when program close')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
-parser.add_argument('folderpath', nargs='+', help='Path of the top folder you want to recursively search in')
+parser.add_argument('paths', nargs='+', help='Paths of the folders you want to recursively search in')
+
+if len(sys.argv) == 1:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
 
 args = parser.parse_args()
+
+from pathlib import Path
+from pyvis.network import Network
+import re
 
 FILES_MATCH = ('.hpp', '.h')
 if not args.header_only:
@@ -72,5 +78,10 @@ for f in iter_src_pathes():
             net.add_node(include)
         net.add_edge(include, f.name)
 
+OUTPUT_NAME = 'graph.html'
+net.show(OUTPUT_NAME)
 
-net.show("graph.html")
+if args.browser:
+    import webbrowser
+    output_path = (Path(__file__).parent / OUTPUT_NAME).resolve()
+    webbrowser.open(output_path)
