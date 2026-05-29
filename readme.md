@@ -16,4 +16,9 @@ Options:
 
 ## How to compile (Pyinstaller)
 
-`pyinstaller .\main.py --onefile -n cppgrapher`
+`pyinstaller .\main.py --onefile -n cppgrapher --collect-all pyvis`
+
+or just add the template folder for smaller binary
+(replace \<PYVIS> with actual path)
+
+`pyinstaller .\main.py --onefile -n cppgrapher --add-data "<PYVIS>\templates;pyvis/templates"`
