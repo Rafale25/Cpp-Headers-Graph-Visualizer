@@ -10,6 +10,7 @@ parser.add_argument('-ho', '--header_only', action='store_true', help='Graph onl
 parser.add_argument('-all', '--all_includes', action='store_true', help='Also graph files not found in given paths')
 parser.add_argument('-b', '--browser', action='store_true', help='Open in browser when program close')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+parser.add_argument('-i', '--inline', action='store_true', help='Inline html js and css (for offline viewing)')
 parser.add_argument('paths', nargs='+', help='Paths of the folders you want to recursively search in')
 
 if len(sys.argv) == 1:
@@ -28,17 +29,19 @@ if not args.header_only:
 
 if (args.verbose):
     print(f'Header only: {args.header_only}')
-    print(f'paths: {args.folderpath}')
+    print(f'paths: {args.paths}')
     print(f'{FILES_MATCH=}')
 
-src_path = [Path(p) for p in args.folderpath]
+src_path = [Path(p) for p in args.paths]
 
 def iter_src_pathes():
     for p in src_path:
         for f in p.rglob("*"):
             yield f
 
-net = Network(notebook = True, cdn_resources = "remote",
+cdn_resources = 'in_line' if args.inline else 'local'
+
+net = Network(notebook=False, cdn_resources=cdn_resources,
                 directed=True,
                 bgcolor = "#222222",
                 font_color = "white",
@@ -79,9 +82,12 @@ for f in iter_src_pathes():
         net.add_edge(include, f.name)
 
 OUTPUT_NAME = 'graph.html'
-net.show(OUTPUT_NAME)
 
+html = net.generate_html(notebook=False)
+Path(OUTPUT_NAME).write_text(html, encoding="utf-8")
 if args.browser:
     import webbrowser
-    output_path = (Path(__file__).parent / OUTPUT_NAME).resolve()
-    webbrowser.open(output_path)
+    webbrowser.open(Path(OUTPUT_NAME).resolve().as_uri())
+
+# Doesn't work with cdn_resources='in_line' because it does not open the file utf-8 encoding
+# net.write_html(OUTPUT_NAME, notebook=False, open_browser=args.browser)
